@@ -1,0 +1,118 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>منو</title>
+    <link rel="stylesheet" href="{% static 'css/reserve_view.css' %}" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>رزرو غذای هفته</h1>
+      <h2 style="font-size: 2rem">خوش اومدی{{user.username}}</h2>
+    </header>
+
+    <div class="table">
+      <table>
+        <thead>
+          <th>روز</th>
+          <th>غذا</th>
+          <th>تعداد</th>
+          <th>محل</th>
+        </thead>
+        <tbody>
+          <tr>
+            <td>شنبه</td>
+            <td>زرشک پلو با مرغ</td>
+            <td>
+              <input type="number" name="" max="2" min="0" id="" class="qty" />
+            </td>
+            <td>
+              <select name="location" id="">
+                <option value="sanat">کارگاه صنعت</option>
+                <option value="golchin">کارگاه گلچین</option>
+                <option value="omid">دفتر مکانیک</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>یکشنبه</td>
+            <td>کوکو سیب‌زمینی</td>
+            <td>
+              <input type="number" name="" max="2" min="0" id="" class="qty" />
+            </td>
+            <td>
+              <select name="" id="">
+                <option value="sanat">کارگاه صنعت</option>
+                <option value="golchin">کارگاه گلچین</option>
+                <option value="omid">دفتر مکانیک</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>دوشنبه</td>
+            <td>قرمه سبزی</td>
+            <td>
+              <input type="number" name="" max="2" min="0" id="" class="qty" />
+            </td>
+            <td>
+              <select name="" id="">
+                <option value="sanat">کارگاه صنعت</option>
+                <option value="golchin">کارگاه گلچین</option>
+                <option value="omid">دفتر مکانیک</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>سشنبه</td>
+            <td>کباب کوبیده</td>
+            <td>
+              <input type="number" name="" max="2" min="0" id="" class="qty" />
+            </td>
+            <td>
+              <select name="" id="">
+                <option value="sanat">کارگاه صنعت</option>
+                <option value="golchin">کارگاه گلچین</option>
+                <option value="omid">دفتر مکانیک</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>چهارشنبه</td>
+            <td>جوجه کباب</td>
+            <td>
+              <input type="number" name="" max="2" min="0" id="" class="qty" />
+            </td>
+            <td>
+              <select name="" id="">
+                <option value="sanat">کارگاه صنعت</option>
+                <option value="golchin">کارگاه گلچین</option>
+                <option value="omid">دفتر مکانیک</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>پنجشنبه</td>
+            <td>پنجشنبه</td>
+            <td>
+              <input type="number" name="" max="2" min="0" id="" class="qty" />
+            </td>
+            <td>
+              <select name="" id="">
+                <option value="sanat">کارگاه صنعت</option>
+                <option value="golchin">کارگاه گلچین</option>
+                <option value="omid">دفتر مکانیک</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br />
+    </div>
+    <div class="btn">
+      <input type="submit" value="فرستادن" class="send" />
+    </div>
+  </body>
+</html>

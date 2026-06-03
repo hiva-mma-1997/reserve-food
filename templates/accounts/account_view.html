@@ -1,0 +1,31 @@
+{% load static %}
+
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{% static 'css/account_view.css' %}" />
+    <title>ورود کاربر</title>
+  </head>
+  <body>
+    <form class="form" id="form" method="post">
+      {% csrf_token %}
+      <label for="">نام کاربری</label>
+      <input
+        class="input"
+        placeholder="نام کاربری خودرا وارد کنید"
+        type="username"
+        name="username"
+      />
+      <label for="">رمز عبور</label>
+      <input
+        class="input"
+        type="password"
+        placeholder="رمز خودرا وارد کنید"
+        name="password"
+      />
+      <button value="ورود" class="send">login</button>
+    </form>
+  </body>
+</html>
