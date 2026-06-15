@@ -1,15 +1,15 @@
 from django.contrib import admin
-from accounts.models import Reservation
+from accounts.models import Reservation,Foodlist
 from django.urls import path
 from django.db.models import Count
 from django.shortcuts import render 
 from django.shortcuts import redirect
 from django.contrib import messages
 
-from accounts.models import Foodlist
+
 
 class FoodlistAdmin(admin.ModelAdmin):
-    list_display=('food','day')
+    list_display=('food','day',)
     ordering=('id',)
 
 class ReservationAdmin(admin.ModelAdmin):
