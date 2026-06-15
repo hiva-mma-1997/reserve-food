@@ -8,24 +8,33 @@
     --sorme: #4c7de9 ;
     --sky: #b3dcf7 ;
     --gray: #b1b1b9 ;
+    --blue2 : #53498b ;
+
 }
 
 .header{
-    font-size: 2rem;
-    text-align: center ;
-    background-color: var(--green);
-    border-radius: 2rem;
-    padding: 2rem 5rem 2rem 2rem;
-    margin: 2rem;
-    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    background-color: var(--sky);
+    padding: 2rem 5rem 2rem 2rem;  
 }
+
+.header_item{
+    background-color: var(--blue2) ;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin: 1rem;
+    font-size: 2rem;
+}
+
 img{
     scale: 0.5;
     border-radius: 50%;
 }
 
 body{
-    background-color: var(--yellow);
+    background-color: var(--gray);
     align-items: center;
 }
 

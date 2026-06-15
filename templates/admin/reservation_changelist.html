@@ -1,0 +1,20 @@
+{% extends "admin/change_list.html" %} {% load static %}{% block object-tools %}
+<link rel="stylesheet" href="{% static 'css/reservation_changelist.css' %}" />
+
+<ul>
+  <li class="list_item">
+    <a href="report" class="link">گزارش غذاها</a>
+  </li>
+  <li class="list_item">
+    <a
+      href="clear"
+      onclick="
+        return confirm('آیا مطمئن هستید که می‌خواهید همه رزروها را حذف کنید؟');
+      "
+      class="link"
+      >پاک کردن رزروهای هفته</a
+    >
+  </li>
+</ul>
+
+{{ block.super }} {% endblock %}

@@ -1,0 +1,13 @@
+.list_item{
+    list-style-type: none;
+    margin: 1rem
+}
+
+
+.link{
+    color: white !important;
+    background-color: rgb(85, 129, 250);
+    padding: 0.5rem;
+    border-radius: 0.2rem;
+    text-decoration: none !important;
+}
