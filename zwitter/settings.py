@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 
-# Quick-start development settings - unsuitable for production
+"""# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -26,9 +26,9 @@ SECRET_KEY = 'django-insecure-6ynecve8z116vxahj_**kfh=85d#sfcwbr!p5-f&8*8))^8*$(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []"""
 
-SITE_ID=2
+"""SITE_ID=2"""
 
 #CSRF_COOKIE_SECURE=True
 
@@ -43,13 +43,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    #'django.contrib.sites',
-   #'django_extensions',
+    'django.contrib.sites',
+    'django_extensions',
+    'django.contrib.sitemaps',
 
     'accounts',
     'core',
     'rest_framework',
+    'robots',
+    'debug_toolbar',
+    'taggit',
 ]
+
+#site framework
+SITE_ID=2
+
+#robots
+ROBOTS_USE_HOST=False
+ROBOTS_USE_SITEMAP = False
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -59,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'zwitter.urls'
@@ -82,7 +94,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'zwitter.wsgi.application'
 
 
-# Database
+"""# Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
@@ -91,7 +103,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
+"""
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -129,9 +141,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS=[
+"""STATICFILES_DIRS=[
     BASE_DIR/ 'static',
-]
+]"""
 
 
 
@@ -141,3 +153,6 @@ STATICFILES_DIRS=[
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+INTERNAL_IPS=['127.0.0.1',]
