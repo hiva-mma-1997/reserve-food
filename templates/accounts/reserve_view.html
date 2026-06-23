@@ -27,19 +27,21 @@
         <span class="navbar-brand">سامانه رزرو غذای شرکت هیدروصنعت شریف</span>
       </div>
     </nav>
-
+    <div class="container">
+      <p class="border text-center border-info mt-5 p-2 h2">{{ location }}</p>
+    </div>
     <div class="container mt-5">
       <form method="post">
-        {% csrf_token %}
-
+        {% csrf_token %} {% if message %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endif %}
         <table
           class="table table-bordered table-hover text-center align-middle"
         >
           <thead class="table-primary">
             <th>روز</th>
             <th>غذا</th>
-            <th>تعداد</th>
-            <th>محل</th>
+            <th>وضعیت رزرو</th>
           </thead>
           <tbody>
             {% for item in food_list %}
@@ -47,24 +49,7 @@
               <td>{{item.day}}</td>
               <td>{{item.food}}</td>
               <td>
-                <input
-                  type="number"
-                  name="qty_{{item.id}}"
-                  max="1"
-                  min="0"
-                  id=""
-                  class="form-select text-center"
-                />
-              </td>
-              <td>
-                <select
-                  name="location_{{item.id}}"
-                  class="form-select text-center"
-                >
-                  <option value="sanat">کارگاه صنعت</option>
-                  <option value="golchin">کارگاه گلچین</option>
-                  <option value="omid">دفتر مکانیک</option>
-                </select>
+                <input type="checkbox" name="food_{{ item.id }}" id="" />
               </td>
             </tr>
             {% endfor %}
@@ -73,7 +58,16 @@
         <hr />
 
         <div class="text-center mt-5">
+          {% if message %}
+          <input
+            type="submit"
+            value="فرستادن"
+            class="btn btn-primary px-5"
+            disabled
+          />
+          {% else %}
           <input type="submit" value="فرستادن" class="btn btn-primary px-5" />
+          {% endif %}
         </div>
 
         <!--old reserves-->

@@ -2,25 +2,11 @@ from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Reservation , Foodlist
+from .models import Reservation ,FoodMenu ,Employees
 from django.contrib.auth import logout
+from django.utils import timezone
+from datetime import time
 
-from rest_framework import generics,permissions
-from .serializers import ReservationSerializer
-
-class ReservationAPI(generics.ListAPIView):
-    serializer_class=ReservationSerializer
-    permission_classes=[permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Reservation.objects.filter(user=self.request.user)
-
-class ReservationCreateAPI(generics.CreateAPIView):
-    serializer_class=ReservationSerializer
-    permission_classes=[permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 def login_view(request):
 
@@ -43,42 +29,59 @@ def login_view(request):
 
 @login_required
 def reserve_view(request):
-    food_list = Foodlist.objects.all()
-     
-
+    employee=Employees.objects.get(user=request.user)
+    
+    food_list=FoodMenu.objects.filter(location=employee.location)
+    
+    #Expiring time reserve
+    now = timezone.localtime().time()
+    if now > time(10, 0):
+        print("hey",now)
+        return render(
+            request,
+            'accounts/reserve_view.html',
+            {
+                'food_list': food_list,
+                'message': 'مهلت رزرو به پایان رسیده است.'
+            }
+        )
+    
+    employee = Employees.objects.get(user=request.user)
     if request.method=='POST':
 
         for item in food_list:
-            qty=request.POST.get(f'qty_{item.id}')
-            location=request.POST.get(f'location_{item.id}')
+            selected = request.POST.get(f'food_{item.id}')
 
-            if qty and qty.isdigit() and int(qty)>0:
-                Reservation.objects.update_or_create(
-                    user=request.user,
-                    day=item.day,
-                    defaults={'food':item.food,
-                        'quantity':int(qty),
-                        'location':location},
-                        )
-
-    reservations = Reservation.objects.filter(user=request.user)
-    print(reservations) 
-    res_dict = {(r.day, r.food): r for r in reservations}
-    print(res_dict)
+            if selected:
+                Reservation.objects.get_or_create(employee=employee,menu=item,)
     
+    reservations = Reservation.objects.filter(employee=employee)
         
     return render(
         request,
         'accounts/reserve_view.html',
-        {'reservations': reservations ,'food_list': food_list}
+        {'reservations': reservations ,'food_list': food_list,'location':employee.location}
     )
+
+
+
+def employee_report(request, employee_id):
+    employee = get_object_or_404(Employees, id=employee_id)
+    reservations = employee.reservations.all().order_by('-reservation_date')
+    
+    return render(request, 'employee_report.html', {
+        'employee': employee,
+        'reservations': reservations
+    })
+
 
 @login_required
 def delete_reservation(request, pk):
-    reservation = get_object_or_404(Reservation, pk=pk, user=request.user)
+    reservation = get_object_or_404(Reservation, pk=pk, employee__user=request.user)
     reservation.delete()
     return redirect('reserve')
 
 def logout_view(request):
     logout(request)
     return redirect('login')
+
