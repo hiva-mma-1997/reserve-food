@@ -24,6 +24,13 @@
             >خروج</a
           >
         </div>
+        <div class="header_item">
+          <a
+            href="{% url 'my_reservations' %}"
+            style="color: white; text-decoration: none"
+            >مشاهده رزرو ماه</a
+          >
+        </div>
         <span class="navbar-brand">سامانه رزرو غذای شرکت هیدروصنعت شریف</span>
       </div>
     </nav>
@@ -79,8 +86,7 @@
               <th>روز</th>
               <th>غذا</th>
               <th>تعداد</th>
-              <th>محل</th>
-              <th>حذف</th>
+              <th>تغییرات</th>
             </tr>
           </thead>
 
@@ -89,7 +95,6 @@
             <tr>
               <td>{{ r.day }}</td>
               <td>{{ r.food }}</td>
-              <td>{{ r.quantity }}</td>
               <td>{{ r.location }}</td>
               <td>
                 <a

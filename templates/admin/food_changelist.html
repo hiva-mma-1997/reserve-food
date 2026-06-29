@@ -7,33 +7,23 @@
 <div class="d-flex justify-content-center gap-3 flex-wrap">
   <div class="">
     <a
-      href="location/mech"
-      class="btn text-dark btn-primary text-decoration-none mt-1"
+      href="{% url 'admin:weekly_menu' 'mech' %}"
+      class="btn text-dark btn-primary text-decoration-none mt-3"
       >ثبت غذای مکانیک</a
     >
   </div>
   <div class="">
     <a
-      href="location/sanat"
-      class="btn text-dark btn-primary text-decoration-none mt-1"
-      >ثبت غذای گلچین</a
-    >
-  </div>
-  <div class="">
-    <a
-      href="location/golchin"
-      class="btn text-dark btn-primary text-decoration-none mt-1 mb-4"
+      href="{% url 'admin:weekly_menu' 'sanat' %}"
+      class="btn text-dark btn-primary text-decoration-none mt-3"
       >ثبت غذای صنعت</a
     >
   </div>
   <div class="">
     <a
-      href="clear"
-      onclick="
-        return confirm('آیا مطمئن هستید که می‌خواهید همه رزروها را حذف کنید؟');
-      "
-      class="btn text-dark btn-primary text-decoration-none mt-1"
-      >پاک کردن لیست غذای هفته</a
+      href="{% url 'admin:weekly_menu' 'golchin' %}"
+      class="btn text-dark btn-primary text-decoration-none mt-3 mb-4"
+      >ثبت غذای گلچین</a
     >
   </div>
 </div>
