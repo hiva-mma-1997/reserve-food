@@ -10,6 +10,7 @@ from datetime import time
 from rangefilter.filters import DateRangeFilter
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
+from jalali_date.admin import ModelAdminJalaliMixin
 
 
 class ReservationInline(admin.TabularInline):
@@ -17,7 +18,7 @@ class ReservationInline(admin.TabularInline):
      extra=0
 
 @admin.register(Reservation)
-class ReservationAdmin(admin.ModelAdmin):
+class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     list_display = ('employee','menu','menu__date','menu__food')
     list_per_page=50
     list_filter=(('menu__date',DateRangeFilter),'menu__location',)
@@ -80,7 +81,7 @@ from accounts.models import Reservation
 from io import BytesIO
 
 @admin.register(Employees)
-class EmployeesAdmin(admin.ModelAdmin):
+class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     list_display=('user','location')
     list_filter=('location',)
     search_fields=('user__username',)
@@ -130,7 +131,7 @@ class EmployeesAdmin(admin.ModelAdmin):
 from datetime import date, timedelta
 
 @admin.register(FoodMenu)
-class FoodMenuAdmin(admin.ModelAdmin):
+class FoodMenuAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     list_display=('food','location','day','date',)
     list_filter=('location','day',)
     ordering=('date',)

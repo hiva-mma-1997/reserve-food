@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from taggit.managers import TaggableManager
 from django.utils import timezone
+import django_jalali.db.models as jmodels
 
 
 class Employees(models.Model):
@@ -19,7 +20,7 @@ class FoodMenu(models.Model):
     location=models.CharField(max_length=30 , choices=LOCATION_CHOISES)
     day=models.CharField(max_length=20,choices=DAY_CHOICES)
     food=models.CharField(max_length=50)
-    date=models.DateField(default=timezone.now)
+    date=jmodels.jDateField(default=timezone.now)
     price=models.IntegerField(default=0)
 
     def __str__(self):

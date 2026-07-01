@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'taggit',
     'rangefilter',
+    'django_jalali',
+    'jalali_date',
 ]
 
 #site framework
