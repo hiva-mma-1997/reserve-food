@@ -1,0 +1,37 @@
+{% load static %}
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css"
+/>
+
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container">
+    <img src="{% static 'images/logo.png' %}" alt="" />
+
+    <div class="navbar-brand">{{employee.user.username}}</div>
+    <div class="header_item"></div>
+    <span class="navbar-brand">سامانه رزرو غذای شرکت هیدروصنعت شریف</span>
+  </div>
+</nav>
+
+<div class="d-flex justify-content-center m-5">
+  <form
+    method="get"
+    action="{% url 'admin:employee_export_report' employee.id %}"
+    class="text-center border m-3 p-2 border-primary rounded"
+  >
+    <div class="m-3">
+      <input type="date" name="from_date" />
+      <label>:از تاریخ</label>
+    </div>
+    <div class="m-3">
+      <input type="date" name="to_date" />
+      <label>:تا تاریخ</label>
+    </div>
+
+    <div class="text-center">
+      <button type="submit" class="button m-5 p-2">Export Excel</button>
+    </div>
+  </form>
+</div>

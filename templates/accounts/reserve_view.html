@@ -48,6 +48,7 @@
           <thead class="table-primary">
             <th>روز</th>
             <th>غذا</th>
+            <th>تاریخ</th>
             <th>وضعیت رزرو</th>
           </thead>
           <tbody>
@@ -55,8 +56,18 @@
             <tr>
               <td>{{item.day}}</td>
               <td>{{item.food}}</td>
+              <td>{{item.date}}</td>
               <td>
+                {% if item.date > today %}
                 <input type="checkbox" name="food_{{ item.id }}" id="" />
+                {% else %}
+                <input
+                  type="checkbox"
+                  name="food_{{ item.id }}"
+                  id=""
+                  disabled
+                />
+                {% endif %}
               </td>
             </tr>
             {% endfor %}
@@ -85,7 +96,7 @@
             <tr>
               <th>روز</th>
               <th>غذا</th>
-              <th>تعداد</th>
+              <th>تاریخ</th>
               <th>تغییرات</th>
             </tr>
           </thead>
@@ -93,9 +104,9 @@
           <tbody>
             {% for r in reservations %}
             <tr>
-              <td>{{ r.day }}</td>
-              <td>{{ r.food }}</td>
-              <td>{{ r.location }}</td>
+              <td>{{ r.menu.day }}</td>
+              <td>{{ r.menu.food }}</td>
+              <td>{{ r.menu.date }}</td>
               <td>
                 <a
                   href="{% url 'delete_reservation' r.id %}"

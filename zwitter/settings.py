@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'robots',
     'debug_toolbar',
     'taggit',
+    'rangefilter',
 ]
 
 #site framework
@@ -158,3 +159,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 INTERNAL_IPS=['127.0.0.1',]
+
+
+#for 404 error by back button
+LOGIN_URL='login'
+LOGOUT_REDIRECT_URL='home'
