@@ -26,7 +26,6 @@
     <thead class="table-primary">
       <tr>
         <th>تاریخ</th>
-        <th>روز</th>
         <th>غذا</th>
         <th>لوکیشن</th>
       </tr>
@@ -36,7 +35,6 @@
       {% for reservation in reservations %}
       <tr>
         <td>{{ reservation.menu.date }}</td>
-        <td>{{ reservation.menu.day }}</td>
         <td>{{ reservation.menu.food }}</td>
         <td>{{ reservation.menu.location }}</td>
       </tr>

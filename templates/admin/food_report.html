@@ -12,13 +12,13 @@
   </div>
 </nav>
 
-<h1 class="text-center mt-5">گزارش غذاها</h1>
+<h1 class="text-center mt-5">گزارش غذای {{ location }}</h1>
 <div class="container mt-5">
   <table class="table table-bordered table-hover text-center align-middle mt-3">
     <thead class="table-primary">
       <tr>
         <th>روز</th>
-        <th>لوکیشن</th>
+        <th>تاریخ</th>
         <th>تعداد رزرو</th>
       </tr>
     </thead>
@@ -26,8 +26,8 @@
     <tbody>
       {% for item in report %}
       <tr>
-        <td>{{ item.menu__day }}</td>
-        <td>{{ item.menu__location }}</td>
+        <td>{{ item.day_name }}</td>
+        <td>{{ item.menu__date }}</td>
         <td>{{ item.total_reserve }}</td>
       </tr>
       {% endfor %}

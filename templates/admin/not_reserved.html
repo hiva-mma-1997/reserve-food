@@ -12,7 +12,6 @@
   </div>
 </nav>
 
-<h1 class="text-center mt-5">{{ location }}</h1>
 <div class="container mt-5">
   <form method="post">
     {% csrf_token %}
@@ -23,6 +22,7 @@
         <tr>
           <th class="p-3">کد کاربر</th>
           <th class="p-3">نام کاربر</th>
+          <th class="p-3">محل</th>
           <th class="p-3">رزرو</th>
         </tr>
       </thead>
@@ -32,6 +32,7 @@
         <tr>
           <td>{{ emp.user.id }}</td>
           <td>{{ emp.user }}</td>
+          <td>{{ emp.location }}</td>
           <td>
             <input type="checkbox" name="employees" value="{{ emp.id }}" />
           </td>

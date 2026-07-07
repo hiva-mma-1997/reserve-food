@@ -27,22 +27,14 @@
     >
   </div>
   <div class="">
-    <a
-      href="clear"
-      onclick="
-        return confirm('آیا مطمئن هستید که می‌خواهید همه رزروها را حذف کنید؟');
-      "
-      class="btn text-dark btn-primary text-decoration-none mt-1"
-      >پاک کردن رزروهای هفته</a
-    >
+    <div>
+      <a
+        href="not-reserved"
+        class="btn text-dark btn-primary text-decoration-none mt-1"
+        >رزرو مسئول</a
+      >
+    </div>
   </div>
-  <div>
-    <a
-      href="not-reserved"
-      class="btn text-dark btn-primary text-decoration-none mt-1"
-      >رزرو مسئول</a
-    >
-  </div>
-</div>
 
-{{ block.super }} {% endblock %}
+  {{ block.super }} {% endblock %}
+</div>

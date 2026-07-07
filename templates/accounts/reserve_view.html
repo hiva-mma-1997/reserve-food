@@ -35,13 +35,16 @@
       </div>
     </nav>
     <div class="container">
-      <p class="border text-center border-info mt-5 p-2 h2">{{ location }}</p>
+      <p class="border text-center border-info mt-5 p-2 h2">
+        {{ employee.get_location_display }}
+      </p>
     </div>
     <div class="container mt-5">
       <form method="post">
-        {% csrf_token %} {% if message %}
-        <div class="alert alert-danger">{{ message }}</div>
+        {% csrf_token %} {% if now > reserve_time %}
+        <div class="alert alert-danger text-center">{{ message }}</div>
         {% endif %}
+        <div class="h2 text-center">هفته جاری</div>
         <table
           class="table table-bordered table-hover text-center align-middle"
         >
@@ -52,13 +55,15 @@
             <th>وضعیت رزرو</th>
           </thead>
           <tbody>
-            {% for item in food_list %}
+            {% for item in food_list %} {% if next_saturday > item.date %}
             <tr>
-              <td>{{item.day}}</td>
+              <td>{{item.day_name}}</td>
               <td>{{item.food}}</td>
               <td>{{item.date}}</td>
               <td>
                 {% if item.date > today %}
+                <input type="checkbox" name="food_{{ item.id }}" id="" />
+                {% elif item.date == today and reserve_time > now %}
                 <input type="checkbox" name="food_{{ item.id }}" id="" />
                 {% else %}
                 <input
@@ -70,22 +75,47 @@
                 {% endif %}
               </td>
             </tr>
-            {% endfor %}
+            {% endif %} {% endfor %}
+          </tbody>
+        </table>
+        <div class="h2 text-center">هفته آینده</div>
+        <table
+          class="table table-bordered table-hover text-center align-middle"
+        >
+          <thead class="table-primary">
+            <th>روز</th>
+            <th>غذا</th>
+            <th>تاریخ</th>
+            <th>وضعیت رزرو</th>
+          </thead>
+          <tbody>
+            {% for item in food_list %} {% if item.date >= next_saturday %}
+            <tr>
+              <td>{{item.day_name}}</td>
+              <td>{{item.food}}</td>
+              <td>{{item.date}}</td>
+              <td>
+                {% if item.date > today %}
+                <input type="checkbox" name="food_{{ item.id }}" id="" />
+                {% elif item.date == today and reserve_time > now %}
+                <input type="checkbox" name="food_{{ item.id }}" id="" />
+                {% else %}
+                <input
+                  type="checkbox"
+                  name="food_{{ item.id }}"
+                  id=""
+                  disabled
+                />
+                {% endif %}
+              </td>
+            </tr>
+            {% endif %} {% endfor %}
           </tbody>
         </table>
         <hr />
 
         <div class="text-center mt-5">
-          {% if message %}
-          <input
-            type="submit"
-            value="فرستادن"
-            class="btn btn-primary px-5"
-            disabled
-          />
-          {% else %}
           <input type="submit" value="فرستادن" class="btn btn-primary px-5" />
-          {% endif %}
         </div>
 
         <!--old reserves-->
@@ -102,19 +132,29 @@
           </thead>
 
           <tbody>
-            {% for r in reservations %}
+            {% for reserve in reservations %}
             <tr>
-              <td>{{ r.menu.day }}</td>
-              <td>{{ r.menu.food }}</td>
-              <td>{{ r.menu.date }}</td>
+              <td>{{ reserve.day_name }}</td>
+              <td>{{ reserve.menu.food }}</td>
+              <td>{{ reserve.menu.date }}</td>
               <td>
+                {% if reserve.menu.date > today %}
                 <a
-                  href="{% url 'delete_reservation' r.id %}"
+                  href="{% url 'delete_reservation' reserve.id %}"
                   class="btn btn-danger btn-sm"
                   onclick="return confirm('حذف شود؟');"
                 >
                   حذف
                 </a>
+                {% elif reserve.menu.date == today and reserve_time > now %}
+                <a
+                  href="{% url 'delete_reservation' reserve.id %}"
+                  class="btn btn-danger btn-sm"
+                  onclick="return confirm('حذف شود؟');"
+                >
+                  حذف
+                </a>
+                {% endif %}
               </td>
             </tr>
             {% empty %}

@@ -6,20 +6,37 @@ from django.shortcuts import render
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.utils import timezone
-from datetime import time
+from datetime import date, timedelta
 from rangefilter.filters import DateRangeFilter
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 from jalali_date.admin import ModelAdminJalaliMixin
+import jdatetime
+from .forms import ExportExcelForm
+from openpyxl import Workbook
+from django.http import HttpResponse
+from accounts.models import Reservation
+from io import BytesIO
+from django.http import JsonResponse
 
 
-class ReservationInline(admin.TabularInline):
+class ReservationInline(ModelAdminJalaliMixin,admin.TabularInline):
      model=Reservation
      extra=0
 
+     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "menu":
+            object_id = request.resolver_match.kwargs.get("object_id")
+            if object_id:
+                employee = Employees.objects.get(pk=object_id)
+                field.queryset = FoodMenu.objects.filter(location=employee.location,).order_by("date")
+
+        return field
+
 @admin.register(Reservation)
 class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
-    list_display = ('employee','menu','menu__date','menu__food')
+    list_display = ('employee','menu__date','menu__food','reserved_by',)
     list_per_page=50
     list_filter=(('menu__date',DateRangeFilter),'menu__location',)
     ordering = ('menu__location', 'menu__date',)
@@ -30,17 +47,23 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
         urls = super().get_urls()
         report_urls=[
             path('report/<str:location>/',self.admin_site.admin_view(self.food_reporter),name='food_report'),
-            path('clear',self.admin_site.admin_view(self.clear_reservation),name='clear_reservation'),
-            path('not-reserved', self.admin_site.admin_view(self.not_reserved_users), name='not-reserved')
+            path('not-reserved', self.admin_site.admin_view(self.not_reserved_users), name='not-reserved'),
+            path("get-menu/",self.admin_site.admin_view(self.get_menu),name="reservation-get-menu",),
         ]
         return report_urls+urls
     
     def food_reporter(self, request, location):
-        current_employee=Employees.objects.get(user=request.user)
-        if current_employee.location==location:
-            report = Reservation.objects.filter(menu__location=location).values('menu__date','menu__location','menu__day').annotate(
+        persian_day=["شنبه" ,"یکشنبه" , "دوشنبه" , "سه‌شنبه" , "چهارشنبه" ,"پنجشنبه"]
+        today=jdatetime.date.today()
+        display_location=dict(Employees.LOCATION_CHOISES).get(location,location)
+        if request.user.groups.filter(name__in=['Managers', 'Restaurant Coordinator']).exists():
+            report = Reservation.objects.filter(menu__location=location ).values('menu__date','menu__location').annotate(
                 total_reserve=Count('id')).order_by('menu__date')
-            return render(request,'admin/food_report.html', {'report': report, 'location':location})
+            for reserve in report:
+                print(reserve)
+                print(reserve['menu__date'].weekday())
+                reserve['day_name']= persian_day[reserve['menu__date'].weekday()]
+            return render(request,'admin/food_report.html', {'report': report, 'location':display_location})
         else:
             messages.error(request,'شما به این صفحه دسترسی ندارید')
             return redirect('admin/accounts/foodmenu/')
@@ -51,34 +74,41 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
         employees=Employees.objects.filter(location=location)
         today=timezone.now().date()
         reserved_ids=Reservation.objects.filter(menu__date=today).values_list('employee_id',flat=True)
-        not_reserved=employees.exclude(id__in=reserved_ids)
+        if request.user.groups.filter(name='Managers').exists():
+            not_reserved=Employees.objects.exclude(id__in=reserved_ids).order_by('location')
+        else:
+            not_reserved=employees.exclude(id__in=reserved_ids).order_by('user_id')
 
         if request.method=='POST':
             employee_ids=request.POST.getlist('employees')
             menu=FoodMenu.objects.get(location=location,date=today)
-            
             for emp_id in employee_ids:
                 employee=Employees.objects.get(id=emp_id)
                 Reservation.objects.get_or_create(
-                    employee=employee,menu=menu,defaults={'reserved_by':request.user})
-                
+                    employee=employee,menu=menu,defaults={'reserved_by':request.user}) 
             return redirect(request.path)
-
         return render(request,'admin/not_reserved.html',{'not_reserved':not_reserved,'location':location})
 
-    def clear_reservation(self,request):
-        Reservation.objects.all().delete()
-        messages.success(
-        request,
-        'رزروهای هفته با موفقیت پاک شدند.'
-        )
-        return redirect('../')
-
-
-from openpyxl import Workbook
-from django.http import HttpResponse
-from accounts.models import Reservation
-from io import BytesIO
+    def get_menu(self, request):
+        employee_id = request.GET.get("employee")
+        today = jdatetime.date.today()
+        if not employee_id:
+            return JsonResponse([], safe=False)
+        today=jdatetime.date.today()
+        first_day=jdatetime.date(today.year,today.month,1)
+        if today.month == 12:
+            next_month = jdatetime.date(today.year + 1, 1, 1)
+        else:
+            next_month = jdatetime.date(today.year, today.month + 1, 1)
+        employee = Employees.objects.get(pk=employee_id)
+        menus = FoodMenu.objects.filter(location=employee.location,
+                                        date__gte=first_day,date__lt=next_month,).order_by("date")
+        data = [{"id": menu.id,"text": f"{str(menu.date.strftime('%Y-%m-%d'))} - {menu.food}",}for menu in menus]
+        
+        return JsonResponse(data, safe=False)
+    
+    class Media:
+        js = ("admin/js/reservation.js",)
 
 @admin.register(Employees)
 class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
@@ -86,7 +116,6 @@ class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     list_filter=('location',)
     search_fields=('user__username',)
     ordering=('location',)
-    inlines=[ReservationInline]
 
     change_form_template='admin/employee_change_form.html'
 
@@ -96,9 +125,10 @@ class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
                      path('<int:employee_id>/export-pdf/',self.admin_site.admin_view(self.export_pdf),name='employee_export_pdf'),
                      path('<int:employee_id>/export-files/',self.admin_site.admin_view(self.reserve_per_date),name='export_files')]
         return custom_urls+urls
-    def reserve_per_date(self,request,employee_id):
-        employee=Employees.objects.select_related('user').get(pk=employee_id)
-        return render(request,'admin/export_files.html',{'employee':employee,})
+    def reserve_per_date(self, request, employee_id):
+        form = ExportExcelForm(request.GET or None)
+        employee=Employees.objects.get(pk=employee_id)
+        return render(request,"admin/export_files.html",{"form": form,"employee_id": employee_id,'employee':employee})
         
     def export_excel(self,request,employee_id):
         wb=Workbook()
@@ -114,7 +144,7 @@ class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
             reservations_employee = reservations_employee.filter(menu__date__lte=to_date)
         Total=reservations_employee.count()
         for reserve in reservations_employee:
-            ws.append([reserve.employee.user.username,reserve.menu.food,reserve.menu.date,reserve.reserved_by.username if reserve.reserved_by else "-"])
+            ws.append([reserve.employee.user.username,reserve.menu.food,reserve.menu.date.strftime("%Y/%m/%d"),reserve.reserved_by.username if reserve.reserved_by else "-"])
         ws.append(['Total', Total])
         output = BytesIO()
         wb.save(output)
@@ -128,13 +158,13 @@ class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     def export_pdf(self):
          pass
 
-from datetime import date, timedelta
 
 @admin.register(FoodMenu)
 class FoodMenuAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
-    list_display=('food','location','day','date',)
-    list_filter=('location','day',)
+    list_display=('food','location','date',)
+    list_filter=('location',)
     ordering=('date',)
+    list_per_page=50
 
     change_list_template='admin/foodmenu_changelist.html'
 
@@ -146,34 +176,36 @@ class FoodMenuAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     
     @method_decorator(never_cache)
     def weekly_menu(self,request,location):
-        today=timezone.localdate()
+        today=jdatetime.date.today()
         days_name=["شنبه" ,"یکشنبه" , "دوشنبه" , "سه‌شنبه" , "چهارشنبه" ,"پنجشنبه"]
         dif=today.weekday()
-        days_from_saturday=(dif-5)%7
+        days_from_saturday=(dif-0)%7
         saturday=today-timedelta(days=days_from_saturday)
         next_saturday=saturday+timedelta(days=7)
         week_dates=[ saturday+timedelta(days=i) for i in range(6)]
         week_dates_next=[next_saturday+timedelta(days=i) for i in range(6) ]
-        week_data=[{'id':i+1,'day':days_name[i],'date':week_dates[i] } for i in range(6)]
-        week_data_next=[{'id':i+1,'day':days_name[i],'date':week_dates_next[i] } for i in range(6)]
-        current_user=Employees.objects.get(user=request.user)
+        foods=FoodMenu.objects.filter(location=location,date__gte=saturday,date__lt=next_saturday)
+        foods_next=FoodMenu.objects.filter(location=location,date__gte=next_saturday,date__lt=next_saturday+timedelta(days=7))
+
+        week_data=[{'id':i+1,'day':days_name[i],'date':week_dates[i],'food':foods[i].food} for i in range(6)]
+        week_data_next=[{'id':i+1,'day':days_name[i],'date':week_dates_next[i], 'food':foods_next[i].food} for i in range(6)]
 
         if request.method=='POST':
             for item in week_data:
                 food = request.POST.get(f"food_{item['date'].strftime('%Y-%m-%d')}")
                 if food:
-                    FoodMenu.objects.get_or_create(location=location,date=item['date'], 
+                    FoodMenu.objects.update_or_create(location=location,date=item['date'], 
                                                    defaults={'food':food, 'day':item['day']})
             for item in week_data_next:
                 food = request.POST.get(f"food_{item['date'].strftime('%Y-%m-%d')}")
                 if food:
-                    FoodMenu.objects.get_or_create(location=location,date=item['date'], 
+                    FoodMenu.objects.update_or_create(location=location,date=item['date'], 
                                                    defaults={'food':food, 'day':item['day']})
             return redirect(request.path)
-        
-        if current_user.location==location:
-            return render(request,'admin/weekly_menu.html',{'location':location,'week_data':week_data,'week_data_next':week_data_next,
-                                                        'today':today})
+        if request.user.groups.filter(name__in=['Managers', 'Restaurant Coordinator']).exists():
+            display_location=dict(Employees.LOCATION_CHOISES).get(location,location)
+            return render(request,'admin/weekly_menu.html',{'location':display_location,'week_data':week_data,'week_data_next':week_data_next,
+                                                        'today':today,})
         else:
             messages.error(request,'شما به این صفحه دسترسی ندارید')
             return redirect('admin/accounts/foodmenu/')

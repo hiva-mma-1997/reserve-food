@@ -12,10 +12,11 @@
   </div>
 </nav>
 
-<h1 class="text-center">{{location}}</h1>
+<h1 class="text-center m-3">{{ location }}</h1>
 <div class="container mt-5">
   <form method="post">
     {% csrf_token %}
+    <h2 class="text-center">هفته جاری</h2>
     <table
       class="table table-bordered table-hover text-center align-middle mt-3"
     >
@@ -33,14 +34,18 @@
           <td>{{ item.id }}</td>
           <td>{{ item.day }}</td>
           <td>{{ item.date }}</td>
-
           <td>
-            <input type="text" name="food_{{ item.date|date:'Y-m-d' }}" />
+            <input
+              type="text"
+              name="food_{{ item.date|date:'Y-m-d' }}"
+              value="{{ item.food }}"
+            />
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    <br />
     <h2 class="text-center">هفته آینده</h2>
     <table
       class="table table-bordered table-hover text-center align-middle mt-3"
@@ -61,7 +66,11 @@
           <td>{{ item.date }}</td>
 
           <td>
-            <input type="text" name="food_{{ item.date|date:'Y-m-d' }}" />
+            <input
+              type="text"
+              name="food_{{ item.date|date:'Y-m-d' }}"
+              value="{{ item.food }}"
+            />
           </td>
         </tr>
         {% endfor %}

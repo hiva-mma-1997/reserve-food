@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 
-"""# Quick-start development settings - unsuitable for production
+# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -26,11 +26,11 @@ SECRET_KEY = 'django-insecure-6ynecve8z116vxahj_**kfh=85d#sfcwbr!p5-f&8*8))^8*$(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []"""
+ALLOWED_HOSTS = ['*']
 
-"""SITE_ID=2"""
+SITE_ID=2
 
-#CSRF_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=False
 
 
 # Application definition
@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'robots',
-    'debug_toolbar',
     'taggit',
     'rangefilter',
     'django_jalali',
@@ -67,13 +66,15 @@ ROBOTS_USE_SITEMAP = False
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    
+    
 ]
 
 ROOT_URLCONF = 'zwitter.urls'
@@ -97,7 +98,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'zwitter.wsgi.application'
 
 
-"""# Database
+# Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
@@ -106,7 +107,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-"""
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -146,11 +147,19 @@ TIME_ZONE='Asia/Tehran'
 
 STATIC_URL = '/static/'
 
-"""STATICFILES_DIRS=[
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATICFILES_DIRS=[
     BASE_DIR/ 'static',
-]"""
+]
 
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
+X_FRAME_OPTIONS='SAMEORIGIN'
 
 
 
