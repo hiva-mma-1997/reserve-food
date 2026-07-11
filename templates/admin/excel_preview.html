@@ -1,0 +1,18 @@
+<table>
+  <thead>
+    <tr>
+      <th>name</th>
+      <th>date</th>
+      <th>location</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in data %}
+    <tr>
+      <td>{{ item.employee }}</td>
+      <td>{{ item.menu.date }}</td>
+      <td>{{ item.menu.location }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -175,3 +175,6 @@ INTERNAL_IPS=['127.0.0.1',]
 #for 404 error by back button
 LOGIN_URL='login'
 LOGOUT_REDIRECT_URL='home'
+
+
+#LANGUAGE_CODE = 'fa-ir'

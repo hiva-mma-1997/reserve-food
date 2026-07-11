@@ -18,7 +18,13 @@ from django.http import HttpResponse
 from accounts.models import Reservation
 from io import BytesIO
 from django.http import JsonResponse
-
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate,Table, TableStyle
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 class ReservationInline(ModelAdminJalaliMixin,admin.TabularInline):
      model=Reservation
@@ -36,6 +42,7 @@ class ReservationInline(ModelAdminJalaliMixin,admin.TabularInline):
 
 @admin.register(Reservation)
 class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
+
     list_display = ('employee','menu__date','menu__food','reserved_by',)
     list_per_page=50
     list_filter=(('menu__date',DateRangeFilter),'menu__location',)
@@ -91,8 +98,8 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
 
     def get_menu(self, request):
         employee_id = request.GET.get("employee")
-        today = jdatetime.date.today()
-        if not employee_id:
+        employee = Employees.objects.get(pk=employee_id)
+        if not employee:
             return JsonResponse([], safe=False)
         today=jdatetime.date.today()
         first_day=jdatetime.date(today.year,today.month,1)
@@ -100,9 +107,8 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
             next_month = jdatetime.date(today.year + 1, 1, 1)
         else:
             next_month = jdatetime.date(today.year, today.month + 1, 1)
-        employee = Employees.objects.get(pk=employee_id)
-        menus = FoodMenu.objects.filter(location=employee.location,
-                                        date__gte=first_day,date__lt=next_month,).order_by("date")
+        menus = FoodMenu.objects.filter(location=employee.location,date__gte=first_day,
+                                        date__lt=next_month,).order_by("date")
         data = [{"id": menu.id,"text": f"{str(menu.date.strftime('%Y-%m-%d'))} - {menu.food}",}for menu in menus]
         
         return JsonResponse(data, safe=False)
@@ -122,8 +128,7 @@ class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     def get_urls(self):
         urls=super().get_urls()
         custom_urls=[path('<int:employee_id>/export-excel/',self.admin_site.admin_view(self.export_excel),name='employee_export_report'),
-                     path('<int:employee_id>/export-pdf/',self.admin_site.admin_view(self.export_pdf),name='employee_export_pdf'),
-                     path('<int:employee_id>/export-files/',self.admin_site.admin_view(self.reserve_per_date),name='export_files')]
+                     path('<int:employee_id>/export-files/',self.admin_site.admin_view(self.reserve_per_date),name='export_files'),]
         return custom_urls+urls
     def reserve_per_date(self, request, employee_id):
         form = ExportExcelForm(request.GET or None)
@@ -131,32 +136,54 @@ class EmployeesAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
         return render(request,"admin/export_files.html",{"form": form,"employee_id": employee_id,'employee':employee})
         
     def export_excel(self,request,employee_id):
-        wb=Workbook()
-        ws=wb.active
-        ws.title="Employee Reservations"
-        ws.append(['Name','Food','Date','Reserved_by'])
-        reservations_employee=Reservation.objects.select_related('employee','employee__user','menu','reserved_by').filter(employee_id=employee_id).order_by('menu__date')
+        pdfmetrics.registerFont(TTFont("Vazir", "static/fonts/Vazir.ttf"))
         from_date = request.GET.get("from_date")
         to_date = request.GET.get("to_date")
+        reservations_employee=Reservation.objects.select_related('employee','employee__user','menu','reserved_by').filter(employee_id=employee_id).order_by('menu__date')
         if from_date:
             reservations_employee = reservations_employee.filter(menu__date__gte=from_date)
         if to_date:
             reservations_employee = reservations_employee.filter(menu__date__lte=to_date)
         Total=reservations_employee.count()
-        for reserve in reservations_employee:
-            ws.append([reserve.employee.user.username,reserve.menu.food,reserve.menu.date.strftime("%Y/%m/%d"),reserve.reserved_by.username if reserve.reserved_by else "-"])
-        ws.append(['Total', Total])
-        output = BytesIO()
-        wb.save(output)
-        output.seek(0)
+        if request.GET.get('type')=='excel':
+            wb=Workbook()
+            ws=wb.active
+            ws.title="Employee Reservations"
+            ws.append(['Name','Food','Date','Reserved_by'])
+            for reserve in reservations_employee:
+                ws.append([reserve.employee.user.username,reserve.menu.food,reserve.menu.date.strftime("%Y/%m/%d"),reserve.reserved_by.username if reserve.reserved_by else "-"])
+            ws.append(['Total', Total])
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+            response=HttpResponse(output.read(),content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            response['Content-Disposition']=f'attachment;filename="reserve_employee_{employee_id}.xlsx"'
+            return response
+        if request.GET.get('type')=='pdf':
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer)
+            data = []
+            data.append([get_display(arabic_reshaper.reshape("ثبت کننده")),get_display(arabic_reshaper.reshape("تاریخ")),
+            get_display(arabic_reshaper.reshape("غذا")),get_display(arabic_reshaper.reshape("نام")),])
+            for reserve in reservations_employee:
+                data.append([get_display(arabic_reshaper.reshape(reserve.reserved_by.username if reserve.reserved_by else "-")),
+            reserve.menu.date.strftime("%Y/%m/%d"),get_display(arabic_reshaper.reshape(reserve.menu.food)),
+            get_display(arabic_reshaper.reshape(reserve.employee.user.username)),])
+
+            data.append(["","",get_display(arabic_reshaper.reshape("جمع کل")),str(reservations_employee.count()),])
+            table = Table(data)
+            table.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 1, colors.black),
+                                       ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                                       ("FONTNAME", (0, 0), (-1, -1), "Vazir"),
+                                       ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                                       ("BOTTOMPADDING", (0, 0), (-1, 0), 8),]))
+            doc.build([table])
+            buffer.seek(0)
+            response = HttpResponse(buffer,content_type="application/pdf",)
+            response["Content-Disposition"] = (f'inline; filename="reserve_employee_{employee_id}.pdf"')
+            return response
+        return HttpResponse("نوع فایل نامعتبر است یا درخواستی ارسال نشده.", status=400)
         
-        response=HttpResponse(output.read(),content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        response['Content-Disposition']=f'attachment;filename="reserve_employee_{employee_id}.xlsx"'
-        
-        return response
-    
-    def export_pdf(self):
-         pass
 
 
 @admin.register(FoodMenu)

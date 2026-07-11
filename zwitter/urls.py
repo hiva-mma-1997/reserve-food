@@ -24,7 +24,7 @@ from django.contrib.sitemaps.views import sitemap
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('account/',include('accounts.urls')),
-    path('',include('core.urls')),
+    path('',include('core.urls'),name='core'),
     path('sitemap.xml',sitemap,{'sitemaps':sitemaps}, name='django.cotrib.sitemaps.views.sitemap'),
     path('robots.txt', include('robots.urls')),
 ]

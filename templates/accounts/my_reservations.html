@@ -7,7 +7,9 @@
 
 <nav class="navbar navbar-dark bg-dark">
   <div class="container">
-    <img src="{% static 'images/logo.png' %}" alt="" />
+    <a href="{% url 'home' %}">
+      <img src="{% static 'images/logo.png' %}" alt=""
+    /></a>
 
     <div class="navbar-brand">{{user.username}}</div>
     <div class="header_item">

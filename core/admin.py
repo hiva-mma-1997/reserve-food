@@ -1,3 +1,6 @@
 from django.contrib import admin
+"""from core.models import Sallary
 
-# Register your models here.
+@admin.register(Sallary)
+class SallaryAdmin(admin.ModelAdmin):
+    pass"""
