@@ -145,7 +145,7 @@
                   href="{% url 'delete_reservation' reserve.id %}"
                   class="btn btn-danger btn-sm"
                   onclick="return confirm('حذف شود؟');"
-                >
+                > 
                   حذف
                 </a>
                 {% elif reserve.menu.date == today and reserve_time > now %}

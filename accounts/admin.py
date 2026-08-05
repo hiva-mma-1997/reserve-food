@@ -12,6 +12,7 @@ from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 from jalali_date.admin import ModelAdminJalaliMixin
 import jdatetime
+from datetime import time
 from .forms import ExportExcelForm
 from openpyxl import Workbook
 from django.http import HttpResponse
@@ -61,14 +62,15 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
     
     def food_reporter(self, request, location):
         persian_day=["شنبه" ,"یکشنبه" , "دوشنبه" , "سه‌شنبه" , "چهارشنبه" ,"پنجشنبه"]
-        today=jdatetime.date.today()
         display_location=dict(Employees.LOCATION_CHOISES).get(location,location)
-        if request.user.groups.filter(name__in=['Managers', 'Restaurant Coordinator']).exists():
-            report = Reservation.objects.filter(menu__location=location ).values('menu__date','menu__location').annotate(
+        today=jdatetime.date.today()
+        dif=today.weekday()
+        days_from_saturday=(dif-0)%7
+        saturday=today-timedelta(days=days_from_saturday)
+        if request.user.groups.filter(name__in=['Managers', 'Restaurant Coordinator', 'Office Admin']).exists():
+            report = Reservation.objects.filter(menu__location=location ,menu__date__gte=saturday,menu__date__lt=saturday+timedelta(days=6)).values('menu__date','menu__location').annotate(
                 total_reserve=Count('id')).order_by('menu__date')
             for reserve in report:
-                print(reserve)
-                print(reserve['menu__date'].weekday())
                 reserve['day_name']= persian_day[reserve['menu__date'].weekday()]
             return render(request,'admin/food_report.html', {'report': report, 'location':display_location})
         else:
@@ -79,9 +81,11 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
         current_employee=Employees.objects.get(user=request.user)
         location=current_employee.location
         employees=Employees.objects.filter(location=location)
-        today=timezone.now().date()
+        today=jdatetime.date.today()
         reserved_ids=Reservation.objects.filter(menu__date=today).values_list('employee_id',flat=True)
-        if request.user.groups.filter(name='Managers').exists():
+        admin_reserve_time=time(10,30)
+        now=timezone.localtime().time()
+        if request.user.groups.filter(name__in=['Managers',]).exists():
             not_reserved=Employees.objects.exclude(id__in=reserved_ids).order_by('location')
         else:
             not_reserved=employees.exclude(id__in=reserved_ids).order_by('user_id')
@@ -94,7 +98,8 @@ class ReservationAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
                 Reservation.objects.get_or_create(
                     employee=employee,menu=menu,defaults={'reserved_by':request.user}) 
             return redirect(request.path)
-        return render(request,'admin/not_reserved.html',{'not_reserved':not_reserved,'location':location})
+        return render(request,'admin/not_reserved.html',{'not_reserved':not_reserved,
+                                                         'location':location,'admin_reserve_time':admin_reserve_time,'now':now,})
 
     def get_menu(self, request):
         employee_id = request.GET.get("employee")
@@ -209,25 +214,38 @@ class FoodMenuAdmin(ModelAdminJalaliMixin,admin.ModelAdmin):
         days_from_saturday=(dif-0)%7
         saturday=today-timedelta(days=days_from_saturday)
         next_saturday=saturday+timedelta(days=7)
-        week_dates=[ saturday+timedelta(days=i) for i in range(6)]
+        week_dates=[saturday+timedelta(days=i) for i in range(6)]
         week_dates_next=[next_saturday+timedelta(days=i) for i in range(6) ]
-        foods=FoodMenu.objects.filter(location=location,date__gte=saturday,date__lt=next_saturday)
-        foods_next=FoodMenu.objects.filter(location=location,date__gte=next_saturday,date__lt=next_saturday+timedelta(days=7))
-
-        week_data=[{'id':i+1,'day':days_name[i],'date':week_dates[i],'food':foods[i].food} for i in range(6)]
-        week_data_next=[{'id':i+1,'day':days_name[i],'date':week_dates_next[i], 'food':foods_next[i].food} for i in range(6)]
+        foods = {food.date: food.food for food in FoodMenu.objects.filter(
+        location=location,
+        date__gte=saturday,
+        date__lt=next_saturday)}
+        foods_next={food.date: food.food for food in FoodMenu.objects.filter(
+            location=location,
+            date__gte=next_saturday,
+            date__lt=next_saturday+timedelta(days=7))}
+        week_data = [{
+        'id': i + 1,
+        'day': days_name[i],
+        'date': week_dates[i],
+        'food': foods.get(week_dates[i], '')}for i in range(6)]
+        week_data_next=[{
+            'id':i+1,
+            'day':days_name[i],
+            'date':week_dates_next[i],
+            'food':foods_next.get(week_dates_next[i], '')}for i in range(6)]
 
         if request.method=='POST':
             for item in week_data:
                 food = request.POST.get(f"food_{item['date'].strftime('%Y-%m-%d')}")
                 if food:
                     FoodMenu.objects.update_or_create(location=location,date=item['date'], 
-                                                   defaults={'food':food, 'day':item['day']})
+                                                   defaults={'food':food,})
             for item in week_data_next:
                 food = request.POST.get(f"food_{item['date'].strftime('%Y-%m-%d')}")
                 if food:
                     FoodMenu.objects.update_or_create(location=location,date=item['date'], 
-                                                   defaults={'food':food, 'day':item['day']})
+                                                   defaults={'food':food,})
             return redirect(request.path)
         if request.user.groups.filter(name__in=['Managers', 'Restaurant Coordinator']).exists():
             display_location=dict(Employees.LOCATION_CHOISES).get(location,location)

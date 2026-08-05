@@ -46,7 +46,7 @@ def reserve_view(request):
     end_month = jdatetime.date(today.year, today.month, last_day)
 
     employee=Employees.objects.get(user=request.user)
-    food_list=FoodMenu.objects.filter(location=employee.location,date__gte=saturday,date__lt=next_saturday+timedelta(days=7))
+    food_list=FoodMenu.objects.filter(location=employee.location,date__gte=saturday,date__lt=next_saturday+timedelta(days=7)).order_by('date')
     reservations = Reservation.objects.filter(employee=employee,menu__date__gte=start_month,menu__date__lte=end_month).order_by('menu__date')
     for reserve in reservations:
         reserve.day_name = persian_day[reserve.menu.date.weekday()]
@@ -65,6 +65,7 @@ def reserve_view(request):
             selected = request.POST.get(f'food_{item.id}')
             if selected:
                 Reservation.objects.get_or_create(employee=employee,menu=item,defaults={'reserved_by':request.user})
+    print(food_list)
     return render(
         request,
         'accounts/reserve_view.html',
@@ -86,8 +87,17 @@ def logout_view(request):
 @never_cache
 @login_required
 def my_reservations(request):
+    today=jdatetime.date.today()
+    start_month=jdatetime.date(today.year,today.month,1)
+    if today.month <= 6:
+            last_day = 31
+    elif today.month <= 11:
+            last_day = 30
+    else:
+            last_day = 30 if jdatetime.date.isleap(today.year) else 29
+    end_month = jdatetime.date(today.year, today.month, last_day)
     employee = Employees.objects.get(user=request.user)
-    reservations =Reservation.objects.filter(employee=employee).select_related('menu').order_by('menu__date')
+    reservations =Reservation.objects.filter(employee=employee,menu__date__gte=start_month, menu__date__lte=end_month).select_related('menu').order_by('menu__date')
     return render(request, 'accounts/my_reservations.html', {
         'reservations': reservations
     })
