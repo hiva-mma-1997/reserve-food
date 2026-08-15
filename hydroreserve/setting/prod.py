@@ -1,4 +1,4 @@
-from zwitter.settings import *
+from hydroreserve.settings import *
 
 
 # Quick-start development settings - unsuitable for production
@@ -8,7 +8,7 @@ from zwitter.settings import *
 SECRET_KEY = 'django-insecure-6ynecve8z116vxahj_**kfh=85d#sfcwbr!p5-f&8*8))^8*$('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -28,4 +28,5 @@ STATICFILES_DIRS=[
     BASE_DIR/ 'static',
 ]
 
-X_FRAME_OPTIONS='SAMEORIGIN'
+
+#CSRF_COOKIE_SECURE=True
