@@ -63,9 +63,9 @@
               <td>{{item.food}}</td>
               <td>{{item.date}}</td>
               <td>
-                {% if item.date > today %}
+                {% if item.date > tomorrow %}
                 <input type="checkbox" name="food_{{ item.id }}" id="" />
-                {% elif item.date == today and reserve_time > now %}
+                {% elif item.date == tomorrow and reserve_time > now %}
                 <input type="checkbox" name="food_{{ item.id }}" id="" />
                 {% else %}
                 <input

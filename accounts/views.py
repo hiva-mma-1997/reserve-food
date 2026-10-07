@@ -31,6 +31,7 @@ def login_view(request):
 def reserve_view(request):
     persian_day={0:'شنبه' , 1:'یکشنبه' , 2:'دوشنبه' , 3:'سه‌شنبه' , 4:'چهارشنبه' , 5:'پنجشنبه'}
     today=jdatetime.date.today()
+    tomorrow=today+timedelta(days=1)
     dif=today.weekday()
     days_from_saturday=(dif-0)%7
     saturday=today-timedelta(days=days_from_saturday)
@@ -54,7 +55,7 @@ def reserve_view(request):
         item.day_name = persian_day[item.date.weekday()]
     #Expiring time reserve
     now = timezone.localtime().time()
-    reserve_time=time(10, 0)
+    reserve_time=time(16, 0)
     if now > reserve_time:
                 message= 'مهلت رزرو امروز به پایان رسیده است.'
     else:
@@ -69,7 +70,7 @@ def reserve_view(request):
     return render(
         request,
         'accounts/reserve_view.html',
-        {'reservations': reservations ,'food_list': food_list,'employee':employee,'today':today, 'reserve_time':reserve_time , 'now': now ,'next_saturday':next_saturday , 'message':message,'persian_day':persian_day}
+        {'reservations': reservations ,'food_list': food_list,'employee':employee,'tomorrow':tomorrow,'today':today, 'reserve_time':reserve_time , 'now': now ,'next_saturday':next_saturday , 'message':message,'persian_day':persian_day}
     )
 
 
